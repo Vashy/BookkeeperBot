@@ -1,0 +1,4 @@
+package sheets
+
+interface Sheet {
+}

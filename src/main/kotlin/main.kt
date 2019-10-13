@@ -2,8 +2,11 @@ import me.ivmg.telegram.bot
 import me.ivmg.telegram.dispatch
 import me.ivmg.telegram.dispatcher.command
 import me.ivmg.telegram.network.fold
+import java.lang.ClassLoader.getSystemResource
 
-const val TOKEN = ""
+val TOKEN = readToken("TOKEN")
+
+private fun readToken(path: String): String = getSystemResource(path).readText()
 
 fun main() {
     val bot = bot {
