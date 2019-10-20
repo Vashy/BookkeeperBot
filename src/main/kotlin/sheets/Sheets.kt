@@ -1,4 +1,0 @@
-package sheets
-
-interface Sheet {
-}

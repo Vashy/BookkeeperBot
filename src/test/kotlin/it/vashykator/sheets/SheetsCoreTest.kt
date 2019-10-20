@@ -1,4 +1,4 @@
-package sheets
+package it.vashykator.sheets
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo

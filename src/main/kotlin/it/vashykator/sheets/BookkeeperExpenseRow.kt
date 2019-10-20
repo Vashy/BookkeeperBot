@@ -1,4 +1,4 @@
-package sheets
+package it.vashykator.sheets
 
 import java.time.LocalDate
 
@@ -6,7 +6,7 @@ fun expenseRow(body: BookkeeperExpenseRow.Builder.() -> Unit): BookkeeperExpense
     BookkeeperExpenseRow.Builder().build(body)
 
 data class BookkeeperExpenseRow(
-    val date: LocalDate,
+    val date: LocalDate = LocalDate.now(),
     val price: Double = 0.0,
     val description: String = "",
     val category: BookkeeperCategory? = null
