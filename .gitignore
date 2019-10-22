@@ -126,6 +126,7 @@ gradle-app.setting
 
 # Google credentials
 **/credentials.json
+**/StoredCredential
 
 # Bot token
 **/TOKEN
