@@ -13,28 +13,28 @@ data class BookkeeperExpenseRow(
 
 
     class Builder {
-
         var date: LocalDate = LocalDate.now()
         var price: Double = 0.0
-        lateinit var description: String
+        var description: String = ""
         var category: BookkeeperCategory? = null
-        fun build() = BookkeeperExpenseRow(date, price, description, category)
 
-        fun build(builder: Builder.() -> Unit): BookkeeperExpenseRow {
-            builder()
-            return build()
+        fun build(): BookkeeperExpenseRow {
+            return BookkeeperExpenseRow(date, price, description, category)
         }
-
     }
 }
 
-fun expenseRow(body: BookkeeperExpenseRow.Builder.() -> Unit): BookkeeperExpenseRow =
-    BookkeeperExpenseRow.Builder().build(body)
+fun expenseRow(body: BookkeeperExpenseRow.Builder.() -> Unit): BookkeeperExpenseRow {
+    val builder = BookkeeperExpenseRow.Builder()
+    builder.body()
+    return builder.build()
+}
 
 fun fromList(args: List<String>): BookkeeperExpenseRow? {
     val matchesUsFormat = matches("""\d\d\d\d[/-]\d\d[/-]\d\d""", args[0])
-    try {
-        return if (matchesUsFormat) {
+
+    return try {
+        if (matchesUsFormat) {
             BookkeeperExpenseRow(
                 date = parse(args[0].replace("/", "-")),
                 price = args[1].toDouble(),
@@ -47,7 +47,6 @@ fun fromList(args: List<String>): BookkeeperExpenseRow? {
             )
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        null
     }
-    return null
 }

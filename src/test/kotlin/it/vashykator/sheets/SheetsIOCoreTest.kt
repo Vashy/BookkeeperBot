@@ -7,10 +7,10 @@ import assertk.assertions.isZero
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class SheetsCoreTest {
+internal class SheetsIOCoreTest {
 
     @Test
-    fun `testing BookkeeperExpenseRow instantiation`() {
+    fun `BookkeeperExpenseRow instantiation`() {
         val line = BookkeeperExpenseRow(LocalDate.now(), 5.5, "Description", BookkeeperCategory.FOOD)
 
         // Builder

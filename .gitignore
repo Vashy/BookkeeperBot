@@ -129,4 +129,6 @@ gradle-app.setting
 **/StoredCredential
 
 # Bot token
-**/TOKEN
+TOKEN
+
+SPREADSHEET_ID

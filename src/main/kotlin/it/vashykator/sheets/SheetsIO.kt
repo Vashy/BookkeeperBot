@@ -9,7 +9,6 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.client.util.store.FileDataStoreFactory
-import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
@@ -18,6 +17,7 @@ import java.io.FileNotFoundException
 import java.io.InputStreamReader
 import java.lang.ClassLoader.getSystemResourceAsStream
 import java.time.LocalDate
+import com.google.api.services.sheets.v4.Sheets as SheetsByGoogle
 
 private const val APPLICATION_NAME = "Bookkeeper"
 private const val VALUE_INPUT_OPTION = "USER_ENTERED"
@@ -28,34 +28,40 @@ private const val CREDENTIALS_FILE_PATH = "credentials.json"
 private val JSON_FACTORY = JacksonFactory.getDefaultInstance()
 private val SCOPES = listOf(SheetsScopes.SPREADSHEETS)
 
-class SheetsClient(val spreadsheetId: String, val range: String) {
-    private val httpTransport: HttpTransport by lazy { GoogleNetHttpTransport.newTrustedTransport() }
+private const val DEFAULT_ROWS_FETCHED = 3
 
-    val service: Sheets by lazy {
-        Sheets.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport))
+typealias Matrix<T> = List<List<T>>
+
+interface SheetsIO {
+    fun getRows(count: Int = DEFAULT_ROWS_FETCHED): List<String>
+    fun writeRow(row: BookkeeperExpenseRow): AppendValuesResponse?
+}
+
+interface SheetsConnection {
+    val httpTransport: HttpTransport
+}
+
+class SheetsIOClient(private val spreadsheetId: String, private val range: String) : SheetsIO, SheetsConnection {
+
+    override val httpTransport: HttpTransport by lazy { GoogleNetHttpTransport.newTrustedTransport() }
+
+    private val service: SheetsByGoogle by lazy {
+        SheetsByGoogle.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport))
             .setApplicationName(APPLICATION_NAME)
             .build()
     }
 
-    fun valueRange(): ValueRange = service.spreadsheets()
-        .values()[spreadsheetId, range]
-        .execute()
-
-    fun getValues(count: Int = 3): List<String> {
+    override fun getRows(count: Int): List<String> {
         val values = valueRange().getValues()
         return if (values.isEmpty()) {
             println("No data found")
             listOf()
         } else {
-            values.forEach { println("${it[0]} | ${it[1]} | ${it[2]} | ${it[3]}") }
-            val map: List<String> = values
-                .filterIndexed { index, _ -> index >= values.size - count }
-                .map { "${it[0]} | ${it[1]} | ${it[2]} | ${it[3]}\n" }
-            map
+            convertRowToString(values, count)
         }
     }
 
-    fun writeValues(row: BookkeeperExpenseRow): AppendValuesResponse? {
+    override fun writeRow(row: BookkeeperExpenseRow): AppendValuesResponse? {
         val values = listOf(listOf(row.date.toSlashyDate(), row.price, row.description))
         val body = ValueRange().setValues(values)
 
@@ -64,6 +70,28 @@ class SheetsClient(val spreadsheetId: String, val range: String) {
             .setInsertDataOption(INSERT_DATA_OPTION)
             .execute()
     }
+
+    private fun valueRange(): ValueRange = service.spreadsheets()
+        .values()[spreadsheetId, range]
+        .execute()
+
+    private fun convertRowToString(
+        values: Matrix<Any>,
+        count: Int
+    ): List<String> {
+        val mappedList = values
+            .filterIndexed { index, _ -> index >= values.size - count && values.size > 2 }
+            .map {
+                when {
+                    it.size == 4 -> "${it[0]} | ${it[1]} | ${it[2]} | ${it[3]}\n"
+                    it.size == 3 -> "${it[0]} | ${it[1]} | ${it[2]}\n"
+                    else -> ""
+                }
+            }
+        println(mappedList)
+        return mappedList
+    }
+
 }
 
 private fun LocalDate.toSlashyDate(): String = toString().replace("-", "/")
