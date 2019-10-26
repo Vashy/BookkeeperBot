@@ -3,6 +3,7 @@ package it.vashykator
 
 import it.vashykator.bot.BotInitializer
 import it.vashykator.sheets.SheetsIOClient
+import org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY
 import java.lang.ClassLoader.getSystemResource
 
 private const val TOKEN_PATH = "TOKEN"
@@ -14,7 +15,10 @@ val SPREADSHEET_ID: String = readSpreadsheetId()
 private const val RANGE = "Foglio1!B16:E"
 private val client: SheetsIOClient by lazy { SheetsIOClient(SPREADSHEET_ID, RANGE) }
 
-fun main() = BotInitializer(TOKEN, client).startPolling()
+fun main() {
+    System.setProperty(DEFAULT_LOG_LEVEL_KEY, "DEBUG")
+    BotInitializer(TOKEN, client).startPolling()
+}
 
 private fun readToken(): String = getSystemResource(TOKEN_PATH).readText().removeSuffix("\n")
 private fun readSpreadsheetId(): String = getSystemResource(SPREADSHEET_ID_PATH).readText().removeSuffix("\n")

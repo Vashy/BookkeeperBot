@@ -12,6 +12,8 @@ import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
+import it.vashykator.Matrix
+import it.vashykator.emptyMatrix
 import mu.KotlinLogging
 import java.io.File
 import java.io.FileNotFoundException
@@ -32,10 +34,8 @@ private val SCOPES = listOf(SheetsScopes.SPREADSHEETS)
 private const val DEFAULT_ROWS_FETCHED = 3
 private val log = KotlinLogging.logger { }
 
-typealias Matrix<T> = List<List<T>>
-
 interface SheetsIO {
-    fun readRows(count: Int = DEFAULT_ROWS_FETCHED): List<String>
+    fun readRows(rowCount: Int = DEFAULT_ROWS_FETCHED): List<String>
     fun writeRow(row: BookkeeperExpenseRow): AppendValuesResponse?
 }
 
@@ -53,14 +53,13 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
             .build()
     }
 
-    override fun readRows(count: Int): List<String> {
+    override fun readRows(rowCount: Int): List<String> {
         val values = valueRange().getValues()
         return if (values.isEmpty()) {
-            println("No data found")
+            log.error { "No data found" }
             listOf()
         } else {
-            @Suppress("UNCHECKED_CAST")
-            convertRowToString(values as Matrix<String>, count)
+            convertRowToString(values.toMatrixOfStrings(), rowCount)
         }
     }
 
@@ -83,17 +82,18 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
         count: Int
     ): List<String> {
         val mappedList = values
-            .hasSizeGreaterThanTwoAndIndexGreaterThan(count)
+            .takeLast(count)
             .joinToPipedString()
 
-        log.debug(mappedList.toString())
+        log.debug { "Read rows: $mappedList" }
         return mappedList
     }
-
 }
 
-private fun Matrix<String>.hasSizeGreaterThanTwoAndIndexGreaterThan(minIndex: Int): Matrix<String> =
-    filterIndexed { elementIndex, _ -> elementIndex >= size - minIndex && size > 2 }
+private fun Matrix<Any>.toMatrixOfStrings(): Matrix<String> {
+    @Suppress("UNCHECKED_CAST")
+    return this as? Matrix<String> ?: emptyMatrix()
+}
 
 private fun Matrix<String>.joinToPipedString(): List<String> = map { it.joinToString(separator = " | ") }
 

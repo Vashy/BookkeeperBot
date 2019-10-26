@@ -2,6 +2,7 @@ package it.vashykator.bot
 
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import it.vashykator.sheets.SheetsIOClient
+import it.vashykator.sheets.pretty
 import me.ivmg.telegram.Bot
 import me.ivmg.telegram.bot
 import me.ivmg.telegram.dispatch
@@ -10,6 +11,7 @@ import me.ivmg.telegram.entities.ParseMode.MARKDOWN
 import me.ivmg.telegram.entities.Update
 import me.ivmg.telegram.network.fold
 import mu.KotlinLogging
+import okhttp3.logging.HttpLoggingInterceptor
 import it.vashykator.sheets.fromListOrNull as fromListToBookkeeperRow
 
 private val log = KotlinLogging.logger { }
@@ -21,7 +23,7 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
     private fun initializeBookkeeperBot(): Bot {
         return bot {
             token = this@BotInitializer.token
-//        logLevel = HttpLoggingInterceptor.Level.BASIC
+            logLevel = HttpLoggingInterceptor.Level.BASIC
 
             dispatch {
                 command("start") { bot, update ->
@@ -30,10 +32,10 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
 
                 command("add") { bot, update, args ->
                     val bookkeeperRow = fromListToBookkeeperRow(args)
-                    log.debug { "Converting $args to $bookkeeperRow" }
+                    log.debug { "Converting $args to BookkeeperRow" }
 
                     if (bookkeeperRow == null) {
-                        log.debug { "Conversion failed" }
+                        log.error { "Conversion failed" }
                         return@command
                     }
 
@@ -45,7 +47,7 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
                             chatId = update.chatId,
                             text = """Updated cells = `${result.updates.updatedCells}`
                                 |
-                                |Value = `$bookkeeperRow`""".trimMargin(),
+                                |Value = `${bookkeeperRow.pretty()}`""".trimMargin(),
                             parseMode = MARKDOWN
                         ).fold { log.warn { it.errorBody } }
                 }

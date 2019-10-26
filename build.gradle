@@ -20,6 +20,7 @@ dependencies {
     implementation "com.google.oauth-client:google-oauth-client-jetty:$googleApiVersion"
     implementation "com.google.apis:google-api-services-sheets:v4-rev516-$googleApiVersion"
 
+    implementation 'org.slf4j:slf4j-simple:1.7.28'
     implementation 'io.github.microutils:kotlin-logging:1.7.6'
 
 
