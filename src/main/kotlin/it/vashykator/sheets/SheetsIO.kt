@@ -12,6 +12,7 @@ import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
+import mu.KotlinLogging
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.InputStreamReader
@@ -29,11 +30,12 @@ private val JSON_FACTORY = JacksonFactory.getDefaultInstance()
 private val SCOPES = listOf(SheetsScopes.SPREADSHEETS)
 
 private const val DEFAULT_ROWS_FETCHED = 3
+private val log = KotlinLogging.logger { }
 
 typealias Matrix<T> = List<List<T>>
 
 interface SheetsIO {
-    fun getRows(count: Int = DEFAULT_ROWS_FETCHED): List<String>
+    fun readRows(count: Int = DEFAULT_ROWS_FETCHED): List<String>
     fun writeRow(row: BookkeeperExpenseRow): AppendValuesResponse?
 }
 
@@ -46,18 +48,19 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
     override val httpTransport: HttpTransport by lazy { GoogleNetHttpTransport.newTrustedTransport() }
 
     private val service: SheetsByGoogle by lazy {
-        SheetsByGoogle.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport))
+        SheetsByGoogle.Builder(httpTransport, JSON_FACTORY, httpTransport.getCredentials())
             .setApplicationName(APPLICATION_NAME)
             .build()
     }
 
-    override fun getRows(count: Int): List<String> {
+    override fun readRows(count: Int): List<String> {
         val values = valueRange().getValues()
         return if (values.isEmpty()) {
             println("No data found")
             listOf()
         } else {
-            convertRowToString(values, count)
+            @Suppress("UNCHECKED_CAST")
+            convertRowToString(values as Matrix<String>, count)
         }
     }
 
@@ -76,28 +79,27 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
         .execute()
 
     private fun convertRowToString(
-        values: Matrix<Any>,
+        values: Matrix<String>,
         count: Int
     ): List<String> {
         val mappedList = values
-            .filterIndexed { index, _ -> index >= values.size - count && values.size > 2 }
-            .map {
-                when {
-                    it.size == 4 -> "${it[0]} | ${it[1]} | ${it[2]} | ${it[3]}\n"
-                    it.size == 3 -> "${it[0]} | ${it[1]} | ${it[2]}\n"
-                    else -> ""
-                }
-            }
-        println(mappedList)
+            .hasSizeGreaterThanTwoAndIndexGreaterThan(count)
+            .joinToPipedString()
+
+        log.debug(mappedList.toString())
         return mappedList
     }
 
 }
 
+private fun Matrix<String>.hasSizeGreaterThanTwoAndIndexGreaterThan(minIndex: Int): Matrix<String> =
+    filterIndexed { elementIndex, _ -> elementIndex >= size - minIndex && size > 2 }
+
+private fun Matrix<String>.joinToPipedString(): List<String> = map { it.joinToString(separator = " | ") }
+
 private fun LocalDate.toSlashyDate(): String = toString().replace("-", "/")
 
-
-private fun getCredentials(HTTP_TRANSPORT: HttpTransport): Credential {
+private fun HttpTransport.getCredentials(): Credential {
     val input = getSystemResourceAsStream(CREDENTIALS_FILE_PATH)
     val clientSecrets = GoogleClientSecrets.load(
         JSON_FACTORY,
@@ -105,7 +107,7 @@ private fun getCredentials(HTTP_TRANSPORT: HttpTransport): Credential {
     )
 
     val flow = GoogleAuthorizationCodeFlow
-        .Builder(HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+        .Builder(this, JSON_FACTORY, clientSecrets, SCOPES)
         .setDataStoreFactory(FileDataStoreFactory(File(TOKENS_DIRECTORY_PATH)))
         .setAccessType("offline")
         .build()

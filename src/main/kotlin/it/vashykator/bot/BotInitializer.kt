@@ -6,10 +6,13 @@ import me.ivmg.telegram.Bot
 import me.ivmg.telegram.bot
 import me.ivmg.telegram.dispatch
 import me.ivmg.telegram.dispatcher.command
-import me.ivmg.telegram.entities.ParseMode
+import me.ivmg.telegram.entities.ParseMode.MARKDOWN
 import me.ivmg.telegram.entities.Update
 import me.ivmg.telegram.network.fold
-import it.vashykator.sheets.fromList as fromListToBookkeeperRow
+import mu.KotlinLogging
+import it.vashykator.sheets.fromListOrNull as fromListToBookkeeperRow
+
+private val log = KotlinLogging.logger { }
 
 class BotInitializer(private val token: String, private val client: SheetsIOClient) {
 
@@ -22,14 +25,17 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
 
             dispatch {
                 command("start") { bot, update ->
-                    bot.sendMessage(chatId = update.chatId, text = "Hi there!").fold { println(it.errorBody) }
+                    bot.sendMessage(chatId = update.chatId, text = "Hi there!").fold { log.warn { it.errorBody } }
                 }
 
                 command("add") { bot, update, args ->
                     val bookkeeperRow = fromListToBookkeeperRow(args)
-                    println(bookkeeperRow)
+                    log.debug { "Converting $args to $bookkeeperRow" }
 
-                    if (bookkeeperRow == null) return@command
+                    if (bookkeeperRow == null) {
+                        log.debug { "Conversion failed" }
+                        return@command
+                    }
 
                     val result: AppendValuesResponse? =
                         client.writeRow(bookkeeperRow)
@@ -37,23 +43,26 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
                     if (result?.isNotEmpty() == true)
                         bot.sendMessage(
                             chatId = update.chatId,
-                            text = "Updated cells: $bookkeeperRow"
-                        ).fold { println(it.errorBody) }
+                            text = """Updated cells = `${result.updates.updatedCells}`
+                                |
+                                |Value = `$bookkeeperRow`""".trimMargin(),
+                            parseMode = MARKDOWN
+                        ).fold { log.warn { it.errorBody } }
                 }
 
                 command("get") { bot, update, args ->
 
                     val values =
-                        if (args.isNotEmpty()) client.getRows(args[0].toInt())
-                        else client.getRows()
+                        if (args.isNotEmpty()) client.readRows(args[0].toInt())
+                        else client.readRows()
 
-                    val msg = values.reduce { acc, s -> acc + s }
+                    val msg = values.reduce { acc, s -> "$acc\n$s" }
 
                     bot.sendMessage(
                         chatId = update.chatId,
                         text = msg,
-                        parseMode = ParseMode.MARKDOWN
-                    ).fold { println(it.errorBody) }
+                        parseMode = MARKDOWN
+                    ).fold { log.warn { it.errorBody } }
                 }
             }
         }

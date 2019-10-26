@@ -10,8 +10,6 @@ data class BookkeeperExpenseRow(
     val description: String = "",
     val category: BookkeeperCategory? = null
 ) {
-
-
     class Builder {
         var date: LocalDate = LocalDate.now()
         var price: Double = 0.0
@@ -24,29 +22,35 @@ data class BookkeeperExpenseRow(
     }
 }
 
+fun BookkeeperExpenseRow.pretty() = toString().substringAfterLast("BookkeeperExpenseRow")
+
 fun expenseRow(body: BookkeeperExpenseRow.Builder.() -> Unit): BookkeeperExpenseRow {
     val builder = BookkeeperExpenseRow.Builder()
     builder.body()
     return builder.build()
 }
 
-fun fromList(args: List<String>): BookkeeperExpenseRow? {
-    val matchesUsFormat = matches("""\d\d\d\d[/-]\d\d[/-]\d\d""", args[0])
+fun fromListOrNull(args: List<String>): BookkeeperExpenseRow? {
+    val usDateFormat = """\d\d\d\d[/-]\d\d[/-]\d\d"""
+    val matchesUsFormat = matches(usDateFormat, args[0])
 
     return try {
         if (matchesUsFormat) {
             BookkeeperExpenseRow(
                 date = parse(args[0].replace("/", "-")),
                 price = args[1].toDouble(),
-                description = args.subList(2, args.size).joinToString(separator = " ")
+                description = args remainingElements 2
             )
-        } else {
+        } else { // No date
             BookkeeperExpenseRow(
                 price = args[0].toDouble(),
-                description = args.subList(1, args.size).joinToString(separator = " ")
+                description = args remainingElements 1
             )
         }
     } catch (e: Exception) {
         null
     }
 }
+
+private infix fun List<String>.remainingElements(startIndex: Int) =
+    subList(startIndex, size).joinToString(separator = " ")

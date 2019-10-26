@@ -13,7 +13,7 @@ internal class BookkeeperExpenseRowTest {
     @Test
     fun `create BookkeeperExpenseRow from list (fromList method)`() {
         val listToRow = listOf("2019-12-12", "12.3", "Description with spaces", "and", "multiple parameters")
-        val row = fromList(listToRow)
+        val row = fromListOrNull(listToRow)
 
         with(assertThat(row)) {
             isNotNull()
@@ -39,7 +39,7 @@ internal class BookkeeperExpenseRowTest {
     @Test
     fun `call failing fromList method and expect null on Double parsing`() {
         val listToRow = listOf("2019-12-12", "aaa", "Description with spaces")
-        val row = fromList(listToRow)
+        val row = fromListOrNull(listToRow)
 
         assertThat(row).isNull()
     }
@@ -47,7 +47,7 @@ internal class BookkeeperExpenseRowTest {
     @Test
     fun `call failing fromList method and expect null on Date parsing`() {
         val listToRow = listOf("2019-12&&12", "15.1", "Description with spaces")
-        val row = fromList(listToRow)
+        val row = fromListOrNull(listToRow)
 
         assertThat(row).isNull()
     }
