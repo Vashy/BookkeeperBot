@@ -2,7 +2,7 @@ package it.vashykator.sheets
 
 import java.util.regex.Pattern
 
-private const val RANGE_FORMAT: String = """.*![A-Z]+\d*:[A-Z]+\d*"""
+private const val RANGE_FORMAT: String = """.+![A-Z]+\d*:[A-Z]+\d*"""
 
 data class BookkeeperSection(
     val earning: SheetRange,

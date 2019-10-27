@@ -3,9 +3,8 @@ package it.vashykator.bot
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import it.vashykator.sheets.SheetsIOClient
 import it.vashykator.sheets.pretty
-import me.ivmg.telegram.Bot
-import me.ivmg.telegram.bot
-import me.ivmg.telegram.dispatch
+import me.ivmg.telegram.*
+import me.ivmg.telegram.dispatcher.Dispatcher
 import me.ivmg.telegram.dispatcher.command
 import me.ivmg.telegram.entities.ParseMode.MARKDOWN
 import me.ivmg.telegram.entities.Update
@@ -26,17 +25,17 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
             logLevel = HttpLoggingInterceptor.Level.BASIC
 
             dispatch {
-                command("start") { bot, update ->
+                safeCommand("start") { bot, update ->
                     bot.sendMessage(chatId = update.chatId, text = "Hi there!").fold { log.warn { it.errorBody } }
                 }
 
-                command("add") { bot, update, args ->
+                safeCommand("add") { bot, update, args ->
                     val bookkeeperRow = fromListToBookkeeperRow(args)
                     log.debug { "Converting $args to BookkeeperRow" }
 
                     if (bookkeeperRow == null) {
                         log.error { "Conversion failed" }
-                        return@command
+                        return@safeCommand
                     }
 
                     val result: AppendValuesResponse? =
@@ -52,7 +51,7 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
                         ).fold { log.warn { it.errorBody } }
                 }
 
-                command("get") { bot, update, args ->
+                safeCommand("get") { bot, update, args ->
 
                     val values =
                         if (args.isNotEmpty()) client.readRows(args[0].toInt())
@@ -73,3 +72,21 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
 
 val Update.chatId: Long
     get() = message?.chat?.id ?: -1L
+
+fun Dispatcher.safeCommand(
+    command: String,
+    body: HandleUpdate
+) = try {
+    command(command, body)
+} catch (e: Exception) {
+    log.warn { e.localizedMessage }
+}
+
+fun Dispatcher.safeCommand(
+    command: String,
+    body: CommandHandleUpdate
+) = try {
+    command(command, body)
+} catch (e: Exception) {
+    log.warn { e.localizedMessage }
+}
