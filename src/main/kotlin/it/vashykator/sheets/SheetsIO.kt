@@ -36,7 +36,7 @@ private val log = KotlinLogging.logger { }
 
 interface SheetsIO {
     fun readRows(rowCount: Int = DEFAULT_ROWS_FETCHED): List<String>
-    fun writeRow(row: BookkeeperExpenseRow): AppendValuesResponse?
+    fun writeRow(row: BookkeeperRow): AppendValuesResponse?
 }
 
 interface SheetsConnection {
@@ -63,7 +63,7 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
         }
     }
 
-    override fun writeRow(row: BookkeeperExpenseRow): AppendValuesResponse? {
+    override fun writeRow(row: BookkeeperRow): AppendValuesResponse? {
         val values = listOf(listOf(row.date.toSlashyDate(), row.price, row.description))
         val body = ValueRange().setValues(values)
 

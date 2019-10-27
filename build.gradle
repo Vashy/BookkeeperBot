@@ -27,12 +27,10 @@ dependencies {
     // Tests dependencies
 
     def junitVersion = '5.5.2'
-//    def assertJVersion = '3.13.2'
     def assertKVersion = '0.20'
 
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: junitVersion
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: junitVersion
-//    testCompile group: 'org.assertj', name: 'assertj-core', version: assertJVersion
     testCompile "com.willowtreeapps.assertk:assertk-jvm:$assertKVersion"
 }
 

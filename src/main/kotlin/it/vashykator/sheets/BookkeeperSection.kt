@@ -4,12 +4,10 @@ import java.util.regex.Pattern
 
 private const val RANGE_FORMAT: String = """.*![A-Z]+\d*:[A-Z]+\d*"""
 
-inline class Range(val range: String)
-
 data class BookkeeperSection(
-    val earning: Range,
-    val expenditure: Range,
-    val waste: Range
+    val earning: SheetRange,
+    val expenditure: SheetRange,
+    val waste: SheetRange
 ) {
     init {
         earning.validate()
@@ -18,4 +16,6 @@ data class BookkeeperSection(
     }
 }
 
-private fun Range.validate() = require(Pattern.matches(RANGE_FORMAT, range))
+inline class SheetRange(val range: String)
+
+fun SheetRange.validate() = require(Pattern.matches(RANGE_FORMAT, range)) { "'$range' is not a valid range" }

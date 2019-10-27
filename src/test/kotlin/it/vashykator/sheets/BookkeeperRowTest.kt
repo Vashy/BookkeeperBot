@@ -8,7 +8,7 @@ import assertk.assertions.isNull
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-internal class BookkeeperExpenseRowTest {
+internal class BookkeeperRowTest {
 
     @Test
     fun `create BookkeeperExpenseRow from list (fromList method)`() {
@@ -18,7 +18,7 @@ internal class BookkeeperExpenseRowTest {
         with(assertThat(row)) {
             isNotNull()
             isEqualTo(
-                BookkeeperExpenseRow(
+                BookkeeperRow(
                     LocalDate.parse("2019-12-12"),
                     12.3,
                     "Description with spaces and multiple parameters",
@@ -26,7 +26,7 @@ internal class BookkeeperExpenseRowTest {
                 )
             )
             isNotEqualTo(
-                BookkeeperExpenseRow(
+                BookkeeperRow(
                     LocalDate.parse("2019-12-12"),
                     12.3,
                     "Description with spaces nope",

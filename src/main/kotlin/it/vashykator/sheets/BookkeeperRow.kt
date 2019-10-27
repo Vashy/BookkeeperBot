@@ -7,7 +7,7 @@ import java.util.regex.Pattern.matches
 
 private val log = KotlinLogging.logger { }
 
-data class BookkeeperExpenseRow(
+data class BookkeeperRow(
     val date: LocalDate = LocalDate.now(),
     val price: Double = 0.0,
     val description: String = "",
@@ -19,35 +19,35 @@ data class BookkeeperExpenseRow(
         var description: String = ""
         var category: BookkeeperCategory? = null
 
-        fun build(): BookkeeperExpenseRow {
-            return BookkeeperExpenseRow(date, price, description, category)
+        fun build(): BookkeeperRow {
+            return BookkeeperRow(date, price, description, category)
         }
     }
 }
 
-fun BookkeeperExpenseRow.pretty() = toString().substringAfterLast("BookkeeperExpenseRow")
+fun BookkeeperRow.pretty() = toString().substringAfterLast("BookkeeperExpenseRow")
 
-fun expenseRow(body: BookkeeperExpenseRow.Builder.() -> Unit): BookkeeperExpenseRow {
-    val builder = BookkeeperExpenseRow.Builder()
+fun expenseRow(body: BookkeeperRow.Builder.() -> Unit): BookkeeperRow {
+    val builder = BookkeeperRow.Builder()
     builder.body()
     return builder.build()
 }
 
-fun fromListOrNull(args: List<String>): BookkeeperExpenseRow? {
+fun fromListOrNull(args: List<String>): BookkeeperRow? {
     val usDateFormat = """\d\d\d\d[/-]\d\d[/-]\d\d"""
 
     return try {
         val matchesUsFormat = matches(usDateFormat, args[0])
         if (matchesUsFormat) {
-            BookkeeperExpenseRow(
+            BookkeeperRow(
                 date = parse(args[0].replace("/", "-")),
                 price = args[1].toDouble(),
-                description = args takeFrom 2
+                description = args.takeFrom(2).joinToString(" ")
             )
         } else { // No date
-            BookkeeperExpenseRow(
+            BookkeeperRow(
                 price = args[0].toDouble(),
-                description = args takeFrom 1
+                description = args.takeFrom(1).joinToString(" ")
             )
         }
     } catch (e: Exception) {
@@ -56,5 +56,5 @@ fun fromListOrNull(args: List<String>): BookkeeperExpenseRow? {
     }
 }
 
-private infix fun List<String>.takeFrom(startIndex: Int) =
-    subList(startIndex, size).joinToString(separator = " ")
+internal fun <T : Any> List<T>.takeFrom(startIndex: Int): List<T> =
+    subList(startIndex, size)

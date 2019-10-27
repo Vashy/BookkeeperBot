@@ -11,10 +11,10 @@ internal class SheetsIOCoreTest {
 
     @Test
     fun `BookkeeperExpenseRow instantiation`() {
-        val line = BookkeeperExpenseRow(LocalDate.now(), 5.5, "Description", BookkeeperCategory.FOOD)
+        val line = BookkeeperRow(LocalDate.now(), 5.5, "Description", BookkeeperCategory.FOOD)
 
         // Builder
-        val row: BookkeeperExpenseRow = expenseRow {
+        val row: BookkeeperRow = expenseRow {
             date = LocalDate.now()
             price = 5.5
             description = "Description"
