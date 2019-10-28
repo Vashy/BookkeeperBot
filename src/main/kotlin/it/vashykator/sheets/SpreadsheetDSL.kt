@@ -1,6 +1,6 @@
 package it.vashykator.sheets
 
-class Spreadsheet(val id: String, val worksheetProviders: List<Worksheet>)
+class Spreadsheet(val id: String, val worksheets: List<Worksheet>)
 
 class Worksheet(val name: String, val bookkeeper: BookkeeperSection)
 
@@ -14,26 +14,26 @@ class WorksheetProvider(val name: String) {
     private val builder by lazy { BookkeeperSectionBuilder(name) }
     val bookkeeperSection by lazy { builder.build() }
 
-    fun earn(body: () -> String) {
-        builder.earning = body()
+    fun earn(range: String) {
+        builder.earning = range
     }
 
-    fun expenditure(body: () -> String) {
-        builder.expenditure = body()
+    fun expenditure(range: String) {
+        builder.expenditure = range
     }
 
-    fun waste(body: () -> String) {
-        builder.waste = body()
+    fun waste(range: String) {
+        builder.waste = range
     }
 }
+
+inline fun spreadsheet(id: String, body: SpreadsheetProvider.() -> Unit): Spreadsheet =
+    SpreadsheetProvider(id).apply(body).invoke()
 
 inline fun SpreadsheetProvider.worksheet(name: String, body: WorksheetProvider.() -> Unit) {
     val worksheet = WorksheetProvider(name).apply(body)
     worksheetProviders.add(worksheet)
 }
-
-inline fun spreadsheet(id: String, body: SpreadsheetProvider.() -> Unit): Spreadsheet =
-    SpreadsheetProvider(id).apply(body).invoke()
 
 private class BookkeeperSectionBuilder(private val sheetName: String) {
     var earning: String? = null
@@ -48,8 +48,8 @@ private class BookkeeperSectionBuilder(private val sheetName: String) {
 
     fun sheetRange(range: String?) =
         range?.let { SheetRange("$sheetName!$range") }
-            ?: throw IllegalStateException("BookkeeperSection not properly initialized")
+            ?: throw IllegalArgumentException("BookkeeperSection not properly initialized")
 }
 
-private fun MutableList<WorksheetProvider>.toWorksheetList() =
+private fun List<WorksheetProvider>.toWorksheetList() =
     map { Worksheet(it.name, it.bookkeeperSection) }

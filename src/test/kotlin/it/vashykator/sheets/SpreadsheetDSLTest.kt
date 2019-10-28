@@ -12,29 +12,29 @@ internal class SpreadsheetDSLTest {
         val spreadsheet = spreadsheet("id") {
 
             worksheet("sheetName 1") {
-                earn { "B:E" }
-                expenditure { "B:E16" }
-                waste { "A13:D16" }
+                earn("B:E")
+                expenditure("B:E16")
+                waste("A13:D16")
             }
 
             worksheet("sheetName 2") {
-                earn { "B:E12" }
-                expenditure { "B:E16" }
-                waste { "A13:D16" }
+                earn("B:E12")
+                expenditure("B:E16")
+                waste("A13:D16")
             }
 
             worksheet("sheetName 3") {
-                earn { "B12:Z" }
-                expenditure { "B:E16" }
-                waste { "A13:D16" }
+                earn("B12:Z")
+                expenditure("B:E16")
+                waste("A13:D16")
             }
         }
 
         with(spreadsheet) {
             assertThat(id).isEqualTo("id")
-            assertThat(worksheetProviders).hasSize(3)
+            assertThat(worksheets).hasSize(3)
 
-            with(worksheetProviders[0]) {
+            with(worksheets[0]) {
                 assertThat(name).isEqualTo("sheetName 1")
 
                 with(bookkeeper) {
@@ -42,7 +42,7 @@ internal class SpreadsheetDSLTest {
                 }
             }
 
-            with(worksheetProviders[1]) {
+            with(worksheets[1]) {
                 assertThat(name).isEqualTo("sheetName 2")
 
                 with(bookkeeper) {
@@ -50,7 +50,7 @@ internal class SpreadsheetDSLTest {
                 }
             }
 
-            with(worksheetProviders[2]) {
+            with(worksheets[2]) {
                 assertThat(name).isEqualTo("sheetName 3")
 
                 with(bookkeeper) {
@@ -65,12 +65,12 @@ internal class SpreadsheetDSLTest {
         assertThat {
             val spreadsheet = spreadsheet("id") {
                 worksheet("Name") {
-                    earn { "abc" }
+                    earn("abc")
                 }
             }
-            spreadsheet.worksheetProviders[0].bookkeeper.expenditure
+            spreadsheet.worksheets[0].bookkeeper.expenditure
         }.isFailure().all {
-            hasClass(IllegalStateException::class)
+            hasClass(IllegalArgumentException::class)
             hasMessage("BookkeeperSection not properly initialized")
         }
     }
