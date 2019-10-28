@@ -46,7 +46,7 @@ private class BookkeeperSectionBuilder(private val sheetName: String) {
         sheetRange(waste)
     )
 
-    private fun sheetRange(range: String?) =
+    fun sheetRange(range: String?) =
         range?.let { SheetRange("$sheetName!$range") }
             ?: throw IllegalStateException("BookkeeperSection not properly initialized")
 }

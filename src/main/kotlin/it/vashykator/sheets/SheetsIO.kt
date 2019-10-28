@@ -14,6 +14,7 @@ import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
 import it.vashykator.Matrix
 import it.vashykator.emptyMatrix
+import it.vashykator.sheets.BookkeeperCategory.NONE
 import mu.KotlinLogging
 import java.io.File
 import java.io.FileNotFoundException
@@ -56,15 +57,15 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
     override fun readRows(rowCount: Int): List<String> {
         val values = valueRange().getValues()
         return if (values.isEmpty()) {
-            log.error { "No data found" }
+            log.warn { "No data found" }
             listOf()
         } else {
-            convertRowToString(values.toMatrixOfStrings(), rowCount)
+            values.toMatrixOfStrings().toStringList(rowCount)
         }
     }
 
     override fun writeRow(row: BookkeeperRow): AppendValuesResponse? {
-        val values = listOf(listOf(row.date.toSlashyDate(), row.price, row.description))
+        val values = row.toSingleRowMatrix()
         val body = ValueRange().setValues(values)
 
         return service.spreadsheets().values().append(spreadsheetId, range, body)
@@ -77,17 +78,16 @@ class SheetsIOClient(private val spreadsheetId: String, private val range: Strin
         .values()[spreadsheetId, range]
         .execute()
 
-    private fun convertRowToString(
-        values: Matrix<String>,
-        count: Int
-    ): List<String> {
-        val mappedList = values
-            .takeLast(count)
-            .joinToPipedString()
+}
 
-        log.debug { "Read rows: $mappedList" }
-        return mappedList
-    }
+private fun BookkeeperRow.toSingleRowMatrix(): Matrix<Any> =
+    listOf(listOf(date.toSlashyDateString(), price, description, if (category != NONE) category.value else ""))
+
+private fun Matrix<String>.toStringList(count: Int): List<String> {
+    val mappedList = takeLast(count).joinToPipedString()
+
+    log.debug { "Read rows: $mappedList" }
+    return mappedList
 }
 
 private fun Matrix<Any>.toMatrixOfStrings(): Matrix<String> {
@@ -97,7 +97,7 @@ private fun Matrix<Any>.toMatrixOfStrings(): Matrix<String> {
 
 private fun Matrix<String>.joinToPipedString(): List<String> = map { it.joinToString(separator = " | ") }
 
-private fun LocalDate.toSlashyDate(): String = toString().replace("-", "/")
+private fun LocalDate.toSlashyDateString(): String = toString().replace("-", "/")
 
 private fun HttpTransport.getCredentials(): Credential {
     val input = getSystemResourceAsStream(CREDENTIALS_FILE_PATH)

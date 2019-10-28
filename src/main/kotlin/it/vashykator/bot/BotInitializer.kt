@@ -1,6 +1,7 @@
 package it.vashykator.bot
 
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
+import it.vashykator.sheets.BookkeeperRowFactoryInstance
 import it.vashykator.sheets.SheetsIOClient
 import it.vashykator.sheets.pretty
 import me.ivmg.telegram.*
@@ -11,7 +12,6 @@ import me.ivmg.telegram.entities.Update
 import me.ivmg.telegram.network.fold
 import mu.KotlinLogging
 import okhttp3.logging.HttpLoggingInterceptor
-import it.vashykator.sheets.fromListOrNull as fromListToBookkeeperRow
 
 private val log = KotlinLogging.logger { }
 
@@ -26,15 +26,20 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
 
             dispatch {
                 safeCommand("start") { bot, update ->
-                    bot.sendMessage(chatId = update.chatId, text = "Hi there!").fold { log.warn { it.errorBody } }
+                    bot.sendMessage(chatId = update.chatId, text = "Hi there!").fold { log.error { it.errorBody } }
                 }
 
                 safeCommand("add") { bot, update, args ->
-                    val bookkeeperRow = fromListToBookkeeperRow(args)
+                    val bookkeeperRow = BookkeeperRowFactoryInstance.from(args)
                     log.debug { "Converting $args to BookkeeperRow" }
 
                     if (bookkeeperRow == null) {
-                        log.error { "Conversion failed" }
+                        log.warn { "Conversion failed" }
+                        bot.sendMessage(
+                            chatId = update.chatId,
+                            text = "Cannot add row `$args`. Command format:\n`/add [yyyy-MM-dd] x.y description [| CATEGORY]` ",
+                            parseMode = MARKDOWN
+                        ).fold { log.error { it.errorBody } }
                         return@safeCommand
                     }
 
@@ -48,7 +53,7 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
                                 |
                                 |Value = `${bookkeeperRow.pretty()}`""".trimMargin(),
                             parseMode = MARKDOWN
-                        ).fold { log.warn { it.errorBody } }
+                        ).fold { log.error { it.errorBody } }
                 }
 
                 safeCommand("get") { bot, update, args ->
@@ -63,7 +68,7 @@ class BotInitializer(private val token: String, private val client: SheetsIOClie
                         chatId = update.chatId,
                         text = msg,
                         parseMode = MARKDOWN
-                    ).fold { log.warn { it.errorBody } }
+                    ).fold { log.error { it.errorBody } }
                 }
             }
         }
