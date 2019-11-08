@@ -25,6 +25,11 @@ fun main() {
                 expenditure("E3:H")
                 waste("J3:M")
             }
+            worksheet("Novembre 2019") {
+                earn("A3:C")
+                expenditure("E3:H")
+                waste("J3:M")
+            }
         }
 
     System.setProperty(DEFAULT_LOG_LEVEL_KEY, "DEBUG")

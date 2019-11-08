@@ -2,5 +2,6 @@ package it.vashykator.sheets
 
 enum class BookkeeperCategory(val value: String) {
     FOOD("Cibo"),
-    NONE("")
+    BOOKS_PDF("Books & PDF"),
+    NONE(""),
 }
