@@ -3,7 +3,6 @@ package it.vashykator.sheets
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import it.vashykator.sheets.BookkeeperCategory.FOOD
-import it.vashykator.sheets.BookkeeperCategory.NONE
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -18,9 +17,9 @@ internal class SheetsIOCoreTest {
     }
 
     @Test
-    fun `default values, category should be NONE`() {
+    fun `default values, category should be None`() {
         val row3 = BookkeeperRow(description = "Description", price = 2.0)
-        assertThat(row3.category).isEqualTo(NONE)
+        assertThat(row3.category).isEqualTo(FOOD)
         assertThat(row3.price).isEqualTo(2.0)
     }
 }

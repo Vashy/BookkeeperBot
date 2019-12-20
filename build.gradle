@@ -29,7 +29,6 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:1.7.28'
     implementation 'io.github.microutils:kotlin-logging:1.7.6'
 
-
     // Tests dependencies
 
     def junitVersion = '5.5.2'

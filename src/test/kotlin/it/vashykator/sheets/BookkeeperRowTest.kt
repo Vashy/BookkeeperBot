@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
-import it.vashykator.sheets.BookkeeperCategory.FOOD
 import it.vashykator.sheets.BookkeeperRowFactoryInstance.from
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -58,10 +57,10 @@ internal class BookkeeperRowTest {
             date = LocalDate.parse("2000-10-01"),
             price = 1.5,
             description = "description",
-            category = FOOD
+            category = BookkeeperCategory.FOOD
         ).pretty()
 
-        assertThat(row).isEqualTo("[date=2000-10-01, price=1.5, description=description, category=FOOD]")
+        assertThat(row).isEqualTo("[date=2000-10-01, price=1.5, description=description, category=Cibo]")
     }
 }
 
@@ -80,7 +79,7 @@ internal class FactoryTest {
         )
         val row = from(listToRow)
 
-        assertThat(row?.category).isEqualTo(FOOD)
+        assertThat(row?.category).isEqualTo(BookkeeperCategory.FOOD)
     }
 
     @Test
@@ -97,6 +96,6 @@ internal class FactoryTest {
         )
         val row = from(listToRow, ",")
 
-        assertThat(row?.category).isEqualTo(FOOD)
+        assertThat(row?.category).isEqualTo(BookkeeperCategory.FOOD)
     }
 }

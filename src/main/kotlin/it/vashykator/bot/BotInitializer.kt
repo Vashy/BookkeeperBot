@@ -2,7 +2,7 @@ package it.vashykator.bot
 
 import com.google.api.services.sheets.v4.model.AppendValuesResponse
 import it.vashykator.sheets.BookkeeperRowFactoryInstance
-import it.vashykator.sheets.SheetsIOClient
+import it.vashykator.sheets.Bookkeeper
 import it.vashykator.sheets.pretty
 import me.ivmg.telegram.*
 import me.ivmg.telegram.dispatcher.Dispatcher
@@ -15,7 +15,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 
 private val log = KotlinLogging.logger { }
 
-class BotInitializer(private val token: String, private val client: SheetsIOClient) {
+class BotInitializer(private val token: String, private val client: Bookkeeper.SheetsIOClient) {
 
     fun startPolling() = initializeBookkeeperBot().startPolling()
 

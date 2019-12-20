@@ -1,6 +1,5 @@
 package it.vashykator.sheets
 
-import it.vashykator.sheets.BookkeeperCategory.NONE
 import mu.KotlinLogging
 import java.time.LocalDate
 import java.time.LocalDate.parse
@@ -12,14 +11,12 @@ data class BookkeeperRow(
     val date: LocalDate = LocalDate.now(),
     val price: Double,
     val description: String,
-    val category: BookkeeperCategory = NONE
+    val category: BookkeeperCategory = BookkeeperCategory.NONE
 )
 
 fun BookkeeperRow.pretty() = toString().substringAfterLast("BookkeeperRow").replace("(", "[").replace(")", "]")
 
-internal fun <T : Any> List<T>.takeFrom(startIndex: Int): List<T> =
-    subList(startIndex, size)
-
+internal fun <T : Any> List<T>.takeFrom(startIndex: Int): List<T> = subList(startIndex, size)
 
 internal interface BookkeeperRowFactory {
     fun from(list: List<String>, categorySeparator: String = "|"): BookkeeperRow?
@@ -35,10 +32,10 @@ internal object BookkeeperRowFactoryInstance : BookkeeperRowFactory {
                 matches(usDateFormat, list[0]) -> {
                     val (description, category) = splitDescriptionAndCategory(list, 2, categorySeparator)
                     BookkeeperRow(
-                        parse(list[0].replace("/", "-")),
-                        list[1].toDouble(),
-                        description,
-                        category
+                        date = parse(list[0].replace("/", "-")),
+                        price = list[1].toDouble(),
+                        description = description,
+                        category = category
                     )
                 }
                 else -> {
@@ -65,15 +62,8 @@ private fun splitDescriptionAndCategory(
 
     val descriptionAndCategory = args.takeFrom(fromIndex).joinToString(" ")
     if (!descriptionAndCategory.contains(categorySeparator))
-        return Pair(descriptionAndCategory, NONE)
+        return Pair(descriptionAndCategory, BookkeeperCategory.NONE)
 
     val split = descriptionAndCategory.split(categorySeparator)
-    return Pair(split[0], safeCategoryOf(split[1]))
+    return Pair(split[0], BookkeeperCategory { split[1] })
 }
-
-private fun safeCategoryOf(value: String) =
-    try {
-        BookkeeperCategory.valueOf(value.trim().toUpperCase())
-    } catch (e: IllegalArgumentException) {
-        NONE
-    }
